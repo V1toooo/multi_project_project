@@ -69,3 +69,5 @@ Makefile
 # Temporary files
 *.tmp
 *.temp
+
+build_*/
