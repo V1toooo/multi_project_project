@@ -8,5 +8,6 @@ add_subdirectory(lib/googletest)
 add_subdirectory(obuchaika)
 add_subdirectory(shellsort)
 add_subdirectory(test_example)
+add_subdirectory(long_number)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
