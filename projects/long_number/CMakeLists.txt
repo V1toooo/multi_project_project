@@ -1,6 +1,14 @@
 project(long_number)
 
-add_library(${PROJECT_NAME} STATIC long_number.cpp)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_library(${PROJECT_NAME} STATIC
+    src/long_number.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${INCLUDE_DIR}
+)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(${PROJECT_NAME} PRIVATE
@@ -9,4 +17,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    add_subdirectory(tests)
+endif()

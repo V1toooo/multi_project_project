@@ -34,10 +34,13 @@ namespace bvs {
 			LongNumber operator % (const LongNumber& x) const;
 			
 			bool is_negative() const noexcept;
-			
 			friend std::ostream& operator << (std::ostream &os, const LongNumber& x);
 			
 		private:
 			int get_length(const char* const str) const noexcept;
+			void create_from_str(const char* const str);
+			int compare(const LongNumber &other) const;
+			LongNumber plus_modules(const LongNumber &a, const LongNumber &b) const;
+			LongNumber minus_modules(const LongNumber &a, const LongNumber &b) const;
 	};
 }
