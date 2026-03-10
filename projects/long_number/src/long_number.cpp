@@ -141,6 +141,15 @@ bool LongNumber::operator > (const LongNumber& x) const {
 bool LongNumber::operator < (const LongNumber& x) const {
 	return (x > *this);
 }
+bool LongNumber::operator >= (const LongNumber& x) const 
+{
+    return (*this > x) || (*this == x);
+}
+
+bool LongNumber::operator <= (const LongNumber& x) const 
+{
+    return (*this < x) || (*this == x);
+}
 
 LongNumber LongNumber::operator + (const LongNumber& x) const {
     if (this->sign == 0) return x;
@@ -257,151 +266,71 @@ LongNumber LongNumber::operator * (const LongNumber& x) const {
     return LongNumber(result_str.c_str());
 }
 
-LongNumber LongNumber::operator / (const LongNumber& x) const {
-    if (x.sign == 0) return LongNumber("0");
-    if (this->sign == 0) return LongNumber("0");
-
-    int len_a = this->length;
-    int len_b = x.length;
-    int* a = new int[len_a];
-    int* b = new int[len_b];
-    int sign_a = this->sign;
-    int sign_b = x.sign;
-
-    for (int i = 0; i < len_a; i++) a[i] = this->numbers[i];
-    for (int i = 0; i < len_b; i++) b[i] = x.numbers[i];
-
-    if (len_a < len_b) return LongNumber("0");
-    if (len_a == len_b) {
-        bool a_less = false;
-        for (int i = 0; i < len_a; i++) {
-            if (a[i] < b[i]) { a_less = true; break; }
-            if (a[i] > b[i]) break;
-        }
-        if (a_less) return LongNumber("0");
+LongNumber LongNumber::operator / (const LongNumber& x) const
+{
+    if (this->is_zero() || x.is_zero()) {
+        return LongNumber();
     }
 
-    reverse(a, a + len_a);
-    reverse(b, b + len_b);
+    LongNumber dividend = *this;
+    LongNumber divisor = x;
+    dividend.sign = 1;
+    divisor.sign = 1;
 
-    string result = "";
-    int* remainder = new int[len_a + len_b]();
-    int remainder_len = 0;
+    if (dividend < divisor) {
+        return LongNumber();
+    }
 
-    for (int i = len_a - 1; i >= 0; i--) {
-        for (int j = remainder_len; j > 0; j--) {
-            remainder[j] = remainder[j-1];
-        }
-        remainder[0] = a[i];
-        remainder_len++;
+    LongNumber quotient(dividend.length, 1);
+    LongNumber current("0");
 
-        int digit = 0;
-        for (int d = 9; d >= 0; d--) {
-            int* product = new int[len_b + 1];
-            int prod_len = 0;
-            int carry = 0;
-            for (int j = 0; j < len_b; j++) {
-                int mult = b[j] * d + carry;
-                product[prod_len++] = mult % 10;
-                carry = mult / 10;
-            }
-            if (carry) product[prod_len++] = carry;
+    for (int i = 0; i < dividend.length; i++) {
+       current = current * LongNumber("10");
+        
+        LongNumber digit(1, 1);
+        digit.numbers[0] = dividend.numbers[i];
+        current = current + digit;
 
-            bool product_less_or_equal = false;
-            if (prod_len < remainder_len) {
-                product_less_or_equal = true;
-            } else if (prod_len == remainder_len) {
-
-                int cmp = 0;
-                for (int j = prod_len - 1; j >= 0; j--) {
-                    if (product[j] > remainder[j]) { cmp = 1; break; }
-                    if (product[j] < remainder[j]) { cmp = -1; break; }
-                }
-                product_less_or_equal = (cmp <= 0);
+        int quotient_digit = 0;
+        for (int q = 0; q <= 9; q++) {
+            LongNumber product = divisor * LongNumber(std::to_string(q).c_str());
+            if (product <= current) {
+                quotient_digit = q;
             } else {
-                product_less_or_equal = false;
-            }
-
-            if (product_less_or_equal) {
-                digit = d;
-                int borrow = 0;
-                for (int j = 0; j < prod_len; j++) {
-                    int sub = product[j] + borrow;
-                    if (remainder[j] < sub) {
-                        remainder[j] = remainder[j] + 10 - sub;
-                        borrow = 1;
-                    } else {
-                        remainder[j] -= sub;
-                        borrow = 0;
-                    }
-                }
-                for (int j = prod_len; j < remainder_len && borrow; j++) {
-                    if (remainder[j] < borrow) {
-                        remainder[j] = remainder[j] + 10 - borrow;
-                        borrow = 1;
-                    } else {
-                        remainder[j] -= borrow;
-                        borrow = 0;
-                    }
-                }
-
-                while (remainder_len > 1 && remainder[remainder_len - 1] == 0) {
-                    remainder_len--;
-                }
-                delete[] product;
                 break;
             }
-            delete[] product;
         }
-        result += to_string(digit);
+
+        quotient.numbers[i] = quotient_digit;
+
+        LongNumber product = divisor * LongNumber(std::to_string(quotient_digit).c_str());
+        current = current - product;
     }
 
-    while (result.length() > 1 && result[0] == '0') {
-        result.erase(0, 1);
+    if (this->sign == -1 && x.numbers[0] > 1) {
+        quotient.numbers[quotient.length - 1] = quotient.numbers[quotient.length - 1] + 1;
     }
 
-    delete[] a;
-    delete[] b;
-    delete[] remainder;
+    int begin = 0;
+    while (begin < quotient.length - 1 && quotient.numbers[begin] == 0) {
+        begin++;
+    }
 
-    if (result == "0") return LongNumber("0");
-    if (sign_a != sign_b) result = "-" + result;
-    return LongNumber(result.c_str());
+    LongNumber result(quotient.length - begin, this->sign * x.sign);
+    for (int i = 0; i < result.length; i++) {
+        result.numbers[i] = quotient.numbers[begin + i];
+    }
+
+    if (result.length == 1 && result.numbers[0] == 0) {
+        result.sign = 1;
+    }
+
+    return result;
 }
 
-LongNumber LongNumber::operator % (const LongNumber& x) const {
-    if (x.compare(LongNumber("0")) == 0) return LongNumber("0");
-    
-    LongNumber a = *this;
-    LongNumber b = x;
-    int original_sign = a.sign;
-    
-    a.sign = 1;
-    b.sign = 1;
-    
-    if (a.compare(b) == -1) {
-        LongNumber res = *this; 
-        res.sign = original_sign;
-        return res;
-    }
-    
-    if (a.compare(b) == 0) return LongNumber("0");
-    
-    LongNumber quotient = a / b;
-    LongNumber product = quotient * b;
-    LongNumber remainder = a - product;
-    
-    remainder.sign = original_sign;
-    
-    if (remainder.compare(LongNumber("0")) == 0) {
-        remainder.sign = 1;
-    }
-
-    while (remainder.length > 1 && remainder.numbers[remainder.length - 1] == 0) {
-        remainder.length--;
-    }
-
-    return remainder;
+LongNumber LongNumber::operator % (const LongNumber& x) const
+{
+    return *this - (*this / x) * x;
 }
 
 bool LongNumber::is_negative() const noexcept {
@@ -473,6 +402,11 @@ int LongNumber::compare(const LongNumber& other) const {
         if (this->numbers[i] < other.numbers[i]) return -1;
     }
     return 0;
+}
+
+bool LongNumber::is_zero() const noexcept
+{
+    return length == 1 && numbers[0] == 0;
 }
 
 LongNumber LongNumber::plus_modules(const LongNumber& a, const LongNumber& b) const {

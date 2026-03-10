@@ -1,0 +1,1 @@
+bool LongNumber::is_zero() const noexcept

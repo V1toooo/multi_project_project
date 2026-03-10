@@ -25,6 +25,8 @@ namespace bvs {
 			bool operator == (const LongNumber& x) const;
 			bool operator != (const LongNumber& x) const;
 			bool operator > (const LongNumber& x) const;
+			bool operator >= (const LongNumber& x) const;
+			bool operator <= (const LongNumber& x) const;
 			bool operator < (const LongNumber& x) const;
 			
 			LongNumber operator + (const LongNumber& x) const;
@@ -38,6 +40,7 @@ namespace bvs {
 			
 		private:
 			int get_length(const char* const str) const noexcept;
+			bool is_zero() const noexcept;
 			void create_from_str(const char* const str);
 			int compare(const LongNumber &other) const;
 			LongNumber plus_modules(const LongNumber &a, const LongNumber &b) const;
