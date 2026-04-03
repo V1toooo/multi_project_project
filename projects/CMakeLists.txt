@@ -9,5 +9,6 @@ add_subdirectory(obuchaika)
 add_subdirectory(shellsort)
 add_subdirectory(test_example)
 add_subdirectory(long_number)
+add_subdirectory(vector_list)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
